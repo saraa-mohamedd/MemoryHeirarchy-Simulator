@@ -1,1 +1,1 @@
-# MemoryHeirarchy-Simulator
+# MemoryHierarchy-Simulator
