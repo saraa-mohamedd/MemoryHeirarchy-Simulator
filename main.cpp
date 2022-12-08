@@ -12,10 +12,11 @@ int tag, index, displacement;
 int cacheclock;
 int hits, misses, totalAccesses;
 int memoryAccessClocks = 100;
-vector<pair <bool, int> > cache;
+vector<pair <bool, string> > cache;
 
 void readAccessSequence(string);
 void cacheAccess(string);
+string hex_to_binary(string);
 
 int main()
 {
@@ -45,7 +46,7 @@ int main()
     for (int i = 0; i < C; i++)
     {
         cache[i].first = false;
-        cache[i].second = 0;
+        cache[i].second = "";
     }
 
     //reading in the access sequence from the file
@@ -67,8 +68,9 @@ void readAccessSequence(string filename)
     string line;
     while (getline(infile, line))
     {
+        cout << endl << "----------------------------------------------------------------------------------------------------" << endl;
+        cout <<  "Memory Access: " << line << endl << endl;
         cacheAccess(line);
-        cout << line << endl;
     }
 }
 
@@ -78,11 +80,11 @@ void cacheAccess(string line)
     string tagbin = bin.substr(0, tag);
     string indexbin = bin.substr(tag, index);
     string displacementbin = bin.substr(tag + index, displacement);
-    if(!cache[stoi(indexbin, nullptr, 2)].first || cache[stoi(indexbin, nullptr, 2)].second != stoi(tagbin, nullptr, 2))
+    if(!cache[stoi(indexbin, nullptr, 2)].first || cache[stoi(indexbin, nullptr, 2)].second != tagbin)
     {
         misses++;
         cache[stoi(indexbin, nullptr, 2)].first = true;
-        cache[stoi(indexbin, nullptr, 2)].second = stoi(tagbin, nullptr, 2);
+        cache[stoi(indexbin, nullptr, 2)].second = tagbin;
     }
     else
     {
@@ -92,7 +94,7 @@ void cacheAccess(string line)
 
     for(int i = 0; i < C; i++)
     {
-        cout << i << " : " << cache[i].first << " " << cache[i].second << endl;
+        cout << i << " : valid = " << cache[i].first << " tag = " << cache[i].second << endl;
     }
     cout << "Total Accesses: " << totalAccesses << endl;
     cout << "Hits: " << hits << endl;
