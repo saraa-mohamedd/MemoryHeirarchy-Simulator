@@ -5,13 +5,15 @@
 #include <sstream>
 #include <algorithm>
 #include <cmath>
+#include <errno.h>
+
 using namespace std;
 
 int dataL, dataS, dataC;
 int instructionsL, instructionsS, instructionsC;
 int dataTag, dataIndexBits, dataDisplacement;
 int instructionsTag, instructionsIndexBits, instructionsDisplacement;
-int cacheclock;
+int instructionsCacheClock, dataCacheClock;
 int dataHits, dataMisses, dataTotalAccesses;
 int instructionsHits, instructionsMisses, instructionsTotalAccesses;
 int memoryAccessClocks = 100;
@@ -45,11 +47,19 @@ int main()
     // validate clock cycles to be between 1 and 10
     do
     {
-        cout << "Enter the number of clock cycles needed to access the cache: ";
-        cin >> cacheclock;
-        if(cacheclock < 1 || cacheclock > 10)
+        cout << "Enter the number of clock cycles needed to access the instructions cache: ";
+        cin >> instructionsCacheClock;
+        if(instructionsCacheClock < 1 || instructionsCacheClock > 10)
             cout << "Please enter a number between 1 and 10" << endl;
-    } while (cacheclock < 1 || cacheclock > 10);
+    } while (instructionsCacheClock < 1 || instructionsCacheClock > 10);  
+
+    do
+    {
+        cout << "Enter the number of clock cycles needed to access the data cache: ";
+        cin >> dataCacheClock;
+        if(dataCacheClock< 1 || dataCacheClock > 10)
+            cout << "Please enter a number between 1 and 10" << endl;
+    } while (dataCacheClock < 1 || dataCacheClock > 10);  
 
     cout << "Enter the complete path for the .txt file with the access sequences for your program (data addreses should start with d & instruction addresses should start with i): ";
     cin >> accessfile;
@@ -139,7 +149,7 @@ void cacheAccessData(string line)
     cout << "Data Hit Ratio: " << (double)dataHits / (double)dataTotalAccesses << endl;
     cout << "Data Miss Ratio: " << (double)dataMisses / (double)dataTotalAccesses << endl;
 
-    cout << "Data Average Access Time: " << (double)(cacheclock) + (memoryAccessClocks * (double)dataMisses / (double)dataTotalAccesses) << endl;
+    cout << "Data Average Access Time: " << (double)(dataCacheClock) + (memoryAccessClocks * (double)dataMisses / (double)dataTotalAccesses) << endl;
 }
 
 void cacheAccessInstructions(string line)
@@ -171,7 +181,7 @@ void cacheAccessInstructions(string line)
     cout << "Instructions Hit Ratio: " << (double)instructionsHits / (double)instructionsTotalAccesses << endl;
     cout << "Instructions Miss Ratio: " << (double)instructionsMisses / (double)instructionsTotalAccesses << endl;
 
-    cout << "Instructions Average Access Time: " << (double)(cacheclock) + (memoryAccessClocks * (double)instructionsMisses / (double)instructionsTotalAccesses) << endl;
+    cout << "Instructions Average Access Time: " << (double)(instructionsCacheClock) + (memoryAccessClocks * (double)instructionsMisses / (double)instructionsTotalAccesses) << endl;
 }
 
 string hex_to_binary(string hex)
