@@ -8,7 +8,7 @@
 using namespace std;
 
 int L, S, C;
-int tag, index, displacement;
+int tag, indexBits, displacement;
 int cacheclock;
 int hits, misses, totalAccesses;
 int memoryAccessClocks = 100;
@@ -29,17 +29,21 @@ int main()
     cout << "Enter your cache line size: ";
     cin >> L;
 
-    cout << "Enter the number of clock cycles needed to access the cache: ";
-    cin >> cacheclock;
+    // validate clock cycles to be between 1 and 10
+    do
+    {
+        cout << "Enter the number of clock cycles needed to access the cache: ";
+        cin >> cacheclock;
+    } while (cacheclock < 1 || cacheclock > 10);
 
     cout << "Enter the complete path for the .txt file with the access sequences for your program: ";
     cin >> accessfile;
     
-    //calculating the number of bits for the tag, index, and displacement
+    //calculating the number of bits for the tag, indexBits, and displacement
     C = S / L;
-    index = log2(C);
+    indexBits = log2(C);
     displacement = log2(L);
-    tag = 32 - index - displacement;
+    tag = 32 - indexBits - displacement;
 
     //initializing cache size according to user input
     cache.resize(C);
@@ -78,8 +82,8 @@ void cacheAccess(string line)
 {
     string bin = hex_to_binary(line);
     string tagbin = bin.substr(0, tag);
-    string indexbin = bin.substr(tag, index);
-    string displacementbin = bin.substr(tag + index, displacement);
+    string indexbin = bin.substr(tag, indexBits);
+    string displacementbin = bin.substr(tag + indexBits, displacement);
     if(!cache[stoi(indexbin, nullptr, 2)].first || cache[stoi(indexbin, nullptr, 2)].second != tagbin)
     {
         misses++;
