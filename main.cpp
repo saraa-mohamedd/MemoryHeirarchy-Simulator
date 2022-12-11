@@ -7,15 +7,20 @@
 #include <cmath>
 using namespace std;
 
-int L, S, C;
-int tag, indexBits, displacement;
+int dataL, dataS, dataC;
+int instructionsL, instructionsS, instructionsC;
+int dataTag, dataIndexBits, dataDisplacement;
+int instructionsTag, instructionsIndexBits, instructionsDisplacement;
 int cacheclock;
-int hits, misses, totalAccesses;
+int dataHits, dataMisses, dataTotalAccesses;
+int instructionsHits, instructionsMisses, instructionsTotalAccesses;
 int memoryAccessClocks = 100;
-vector<pair <bool, string> > cache;
+vector<pair <bool, string> > dataCache;
+vector<pair <bool, string> > instructionsCache;
 
 void readAccessSequence(string);
-void cacheAccess(string);
+void cacheAccessData(string);
+void cacheAccessInstructions(string);
 string hex_to_binary(string);
 
 int main()
@@ -23,34 +28,58 @@ int main()
     string accessfile;
 
     // taking all necessary input from user
-    cout << "Enter your total cache size: ";
-    cin >> S;
+    // data cache
+    cout << "Enter your total data cache size: ";
+    cin >> dataS;
 
-    cout << "Enter your cache line size: ";
-    cin >> L;
+    cout << "Enter your data cache line size: ";
+    cin >> dataL;
+
+    // instructions cache
+    cout << "Enter your total instructions cache size: ";
+    cin >> instructionsS;
+
+    cout << "Enter your instructions cache line size: ";
+    cin >> instructionsL;
 
     // validate clock cycles to be between 1 and 10
     do
     {
         cout << "Enter the number of clock cycles needed to access the cache: ";
         cin >> cacheclock;
+        if(cacheclock < 1 || cacheclock > 10)
+            cout << "Please enter a number between 1 and 10" << endl;
     } while (cacheclock < 1 || cacheclock > 10);
 
-    cout << "Enter the complete path for the .txt file with the access sequences for your program: ";
+    cout << "Enter the complete path for the .txt file with the access sequences for your program (data addreses should start with d & instruction addresses should start with i): ";
     cin >> accessfile;
     
-    //calculating the number of bits for the tag, indexBits, and displacement
-    C = S / L;
-    indexBits = log2(C);
-    displacement = log2(L);
-    tag = 32 - indexBits - displacement;
+    //calculating the number of bits for the tag, indexBits, and displacement for the data cache
+    dataC = dataS / dataL;
+    dataIndexBits = log2(dataC);
+    dataDisplacement = log2(dataL);
+    dataTag = 32 - dataIndexBits - dataDisplacement;
 
-    //initializing cache size according to user input
-    cache.resize(C);
-    for (int i = 0; i < C; i++)
+    // calculating the number of bits for the tag, indexBits, and displacement for the instructions cache
+    instructionsC = instructionsS / instructionsL;
+    instructionsIndexBits = log2(instructionsC);
+    instructionsDisplacement = log2(instructionsL);
+    instructionsTag = 32 - instructionsIndexBits - instructionsDisplacement;
+
+    //initializing data cache size according to user input
+    dataCache.resize(dataC);
+    for(int i = 0; i < dataC; i++)
     {
-        cache[i].first = false;
-        cache[i].second = "";
+        dataCache[i].first = false;
+        dataCache[i].second = "";
+    }
+
+    //initializing instructions cache size according to user input
+    instructionsCache.resize(instructionsC);
+    for(int i = 0; i < instructionsC; i++)
+    {
+        instructionsCache[i].first = false;
+        instructionsCache[i].second = "";
     }
 
     //reading in the access sequence from the file
@@ -74,39 +103,75 @@ void readAccessSequence(string filename)
     {
         cout << endl << "----------------------------------------------------------------------------------------------------" << endl;
         cout <<  "Memory Access: " << line << endl << endl;
-        cacheAccess(line);
+        if(line.at(0) == 'd')
+            cacheAccessData(line.substr(1));
+        else if(line.at(0) == 'i')
+            cacheAccessInstructions(line.substr(1));
     }
 }
 
-void cacheAccess(string line)
+void cacheAccessData(string line)
 {
     string bin = hex_to_binary(line);
-    string tagbin = bin.substr(0, tag);
-    string indexbin = bin.substr(tag, indexBits);
-    string displacementbin = bin.substr(tag + indexBits, displacement);
-    if(!cache[stoi(indexbin, nullptr, 2)].first || cache[stoi(indexbin, nullptr, 2)].second != tagbin)
+    string tagbin = bin.substr(0, dataTag);
+    string indexbin = bin.substr(dataTag, dataIndexBits);
+    string displacementbin = bin.substr(dataTag + dataIndexBits, dataDisplacement);
+    if(!dataCache[stoi(indexbin, nullptr, 2)].first || dataCache[stoi(indexbin, nullptr, 2)].second != tagbin)
     {
-        misses++;
-        cache[stoi(indexbin, nullptr, 2)].first = true;
-        cache[stoi(indexbin, nullptr, 2)].second = tagbin;
+        dataMisses++;
+        dataCache[stoi(indexbin, nullptr, 2)].first = true;
+        dataCache[stoi(indexbin, nullptr, 2)].second = tagbin;
     }
     else
     {
-        hits++;
+        dataHits++;
     }
-    totalAccesses++;
+    dataTotalAccesses++;
 
-    for(int i = 0; i < C; i++)
+    cout<<"Data Cache:"<<endl;
+    for(int i = 0; i < dataC; i++)
     {
-        cout << i << " : valid = " << cache[i].first << " tag = " << cache[i].second << endl;
+        cout << i << " : valid = " << dataCache[i].first << " tag = " << dataCache[i].second << endl;
     }
-    cout << "Total Accesses: " << totalAccesses << endl;
-    cout << "Hits: " << hits << endl;
-    cout << "Misses: " << misses << endl;
-    cout << "Hit Ratio: " << (double)hits / (double)totalAccesses << endl;
-    cout << "Miss Ratio: " << (double)misses / (double)totalAccesses << endl;
+    cout << "Data Total Accesses: " << dataTotalAccesses << endl;
+    cout << "Data Hits: " << dataHits << endl;
+    cout << "Data Misses: " << dataMisses << endl;
+    cout << "Data Hit Ratio: " << (double)dataHits / (double)dataTotalAccesses << endl;
+    cout << "Data Miss Ratio: " << (double)dataMisses / (double)dataTotalAccesses << endl;
 
-    cout << "Average Access Time: " << (double)(cacheclock) + (memoryAccessClocks * (double)misses / (double)totalAccesses) << endl;
+    cout << "Data Average Access Time: " << (double)(cacheclock) + (memoryAccessClocks * (double)dataMisses / (double)dataTotalAccesses) << endl;
+}
+
+void cacheAccessInstructions(string line)
+{
+    string bin = hex_to_binary(line);
+    string tagbin = bin.substr(0, instructionsTag);
+    string indexbin = bin.substr(instructionsTag, instructionsIndexBits);
+    string displacementbin = bin.substr(instructionsTag + instructionsIndexBits, instructionsDisplacement);
+    if(!instructionsCache[stoi(indexbin, nullptr, 2)].first || instructionsCache[stoi(indexbin, nullptr, 2)].second != tagbin)
+    {
+        instructionsMisses++;
+        instructionsCache[stoi(indexbin, nullptr, 2)].first = true;
+        instructionsCache[stoi(indexbin, nullptr, 2)].second = tagbin;
+    }
+    else
+    {
+        instructionsHits++;
+    }
+    instructionsTotalAccesses++;
+
+    cout<<"Instructions Cache:"<<endl;
+    for(int i = 0; i < instructionsC; i++)
+    {
+        cout << i << " : valid = " << instructionsCache[i].first << " tag = " << instructionsCache[i].second << endl;
+    }
+    cout << "Instructions Total Accesses: " << instructionsTotalAccesses << endl;
+    cout << "Instructions Hits: " << instructionsHits << endl;
+    cout << "Instructions Misses: " << instructionsMisses << endl;
+    cout << "Instructions Hit Ratio: " << (double)instructionsHits / (double)instructionsTotalAccesses << endl;
+    cout << "Instructions Miss Ratio: " << (double)instructionsMisses / (double)instructionsTotalAccesses << endl;
+
+    cout << "Instructions Average Access Time: " << (double)(cacheclock) + (memoryAccessClocks * (double)instructionsMisses / (double)instructionsTotalAccesses) << endl;
 }
 
 string hex_to_binary(string hex)
